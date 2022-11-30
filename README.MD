@@ -167,31 +167,45 @@ openssl x509 -noout -text -in ca/ca.cert.pem
 ```
 
 ## Intermediate certs
-Create crlnumber file for invalid certs
+Create folders
 ```shell
-echo 1000 > crlnumber
+mkdir "ca/intermediate"
+mkdir ca/intermediate/certs ca/intermediate/crl ca/intermediate/csr ca/intermediate/newcerts ca/intermediate/private
+touch ca/intermediate/index.txt
+echo 1000 > ca/intermediate/serial
+echo 1000 > ca/intermediate/crlnumber
+touch ca/intermediate/openssl.cnf
+```
+Copy data from ca/openssl.cnf to ca/intermediate/openssl.cnf and change
+```editorconfig
+[ CA_default ]
+dir             = /ca/intermediate
+private_key     = $dir/private/intermediate.key.pem
+certificate     = $dir/certs/intermediate.cert.pem
+crl             = $dir/crl/intermediate.crl.pem
+policy          = policy_loose
 ```
 Generate intermediate private key
 ```shell
-openssl genrsa -aes256 -out intermediate00.key.pem 4096
+openssl genrsa -aes256 -out ca/intermediate/private/intermediate.key.pem 4096
 ```
 Generate CSR(certificate signing request) for intermediate cert
 ```shell
-openssl req -config openssl.cnf -new -sha256 \
--key intermediate00.key.pem -out intermediate00.csr.pem
+openssl req -config ca/intermediate/openssl.cnf -new -sha256 \
+-key ca/intermediate/private/intermediate.key.pem -out ca/intermediate/csr/intermediate.csr.pem
 ```
 Generate intermediate cert signed by root CA
 ```shell
-openssl ca -config ../openssl.cnf -extensions v3_intermediate_ca \
+openssl ca -config ca/openssl.cnf -extensions v3_intermediate_ca \
 -days 3650 -notext -md sha256 \
--in intermediate00.csr.pem \
--out intermediate00.cert.pem
+-in ca/intermediate/csr/intermediate.csr.pem \
+-out ca/intermediate/intermediate.cert.pem
 ```
 Check intermediate cert
 ```shell
-openssl x509 -noout -text -in intermediate00.cert.pem
+openssl x509 -noout -text -in ca/intermediate/intermediate.cert.pem
 ```
 Check intermediate cert with root CA
 ```shell
-openssl verify -CAfile ../ca.cert.pem intermediate00.cert.pem
+openssl verify -CAfile ca/ca.cert.pem ca/intermediate/intermediate.cert.pem
 ```

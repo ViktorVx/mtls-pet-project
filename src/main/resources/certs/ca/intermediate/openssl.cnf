@@ -3,19 +3,22 @@
 default_ca = CA_default
 
 [ CA_default ]
-dir             = /root/ca/intermediate
-private_key     = $dir/private/intermediate.key.pem
-certificate     = $dir/certs/intermediate.cert.pem
-crl             = $dir/crl/intermediate.crl.pem
-policy          = policy_loose
+# Directory and file locations.
+dir               = ca/intermediate
+certs             = $dir
+crl_dir           = $dir/crl
+new_certs_dir     = $dir/newcerts
+database          = $dir/index.txt
+serial            = $dir/serial
+RANDFILE          = $dir/private/.rand
 
 # The root key and root certificate.
- private_key       = $dir/private/ca.key.pem
- certificate       = $dir/certs/ca.cert.pem
+ private_key       = $dir/private/intermediate.key.pem
+ certificate       = $dir/certs/intermediate.cert.pem
 
 # For certificate revocation lists.
  crlnumber         = $dir/crlnumber
- crl               = $dir/crl/ca.crl.pem
+ crl               = $dir/crl/intermediate.crl.pem
  crl_extensions    = crl_ext
  default_crl_days  = 30
 
@@ -23,10 +26,10 @@ policy          = policy_loose
  default_md        = sha256
 
 name_opt          = ca_default
- cert_opt          = ca_default
- default_days      = 375
- preserve          = no
- policy            = policy_strict
+cert_opt          = ca_default
+default_days      = 375
+preserve          = no
+policy            = policy_loose
 
 [ policy_strict ]
 # The root CA should only sign intermediate certificates that match.
