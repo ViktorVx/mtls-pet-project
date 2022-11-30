@@ -1,25 +1,3 @@
-#### Password for all 
-```shell
-password=qwerty123
-```
-#### Root dir
-```shell
-/certs
-```
-#### Guide 
-[EN] https://jamielinux.com/docs/openssl-certificate-authority/ <br/>
-[RU] https://sgolubev.ru/openssl-ca/
-
-## CA certs
-Prepare folders for ca directory
-```shell
-mkdir ca/certs ca/crl ca/newcerts ca/private
-touch ca/index.txt
-touch ca/openssl.cnf
-echo 1000 > ca/serial
-```
-Fulfill openssl.cnf file with data
-```
 [ ca ]
 #man ca
 default_ca = CA_default
@@ -35,23 +13,23 @@ serial            = $dir/serial
 RANDFILE          = $dir/private/.rand
 
 # The root key and root certificate.
-private_key       = $dir/ca.key.pem
-certificate       = $dir/ca.cert.pem
+ private_key       = $dir/ca.key.pem
+ certificate       = $dir/ca.cert.pem
 
 # For certificate revocation lists.
-crlnumber         = $dir/crlnumber
-crl               = $dir/crl/ca.crl.pem
-crl_extensions    = crl_ext
-default_crl_days  = 30
+ crlnumber         = $dir/crlnumber
+ crl               = $dir/crl/ca.crl.pem
+ crl_extensions    = crl_ext
+ default_crl_days  = 30
 
 # SHA-1 is deprecated, so use SHA-2 instead.
-default_md        = sha256
+ default_md        = sha256
 
 name_opt          = ca_default
-cert_opt          = ca_default
-default_days      = 375
-preserve          = no
-policy            = policy_strict
+ cert_opt          = ca_default
+ default_days      = 375
+ preserve          = no
+ policy            = policy_strict
 
 [ policy_strict ]
 # The root CA should only sign intermediate certificates that match.
@@ -149,49 +127,3 @@ subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid,issuer
 keyUsage = critical, digitalSignature
 extendedKeyUsage = critical, OCSPSigning
-```
-Generate CA private key
-```shell
-openssl genrsa -aes256 -out ca/private/ca.key.pem 4096
-```
-Generate CA cert
-```shell
-openssl req -config ca/openssl.cnf \
--key ca/private/ca.key.pem \
--new -x509 -days 7300 -sha256 -extensions v3_ca \
--out ca/ca.cert.pem
-```
-Check CA cert
-```shell
-openssl x509 -noout -text -in ca/ca.cert.pem
-```
-
-## Intermediate certs
-Create crlnumber file for invalid certs
-```shell
-echo 1000 > crlnumber
-```
-Generate intermediate private key
-```shell
-openssl genrsa -aes256 -out intermediate00.key.pem 4096
-```
-Generate CSR(certificate signing request) for intermediate cert
-```shell
-openssl req -config openssl.cnf -new -sha256 \
--key intermediate00.key.pem -out intermediate00.csr.pem
-```
-Generate intermediate cert signed by root CA
-```shell
-openssl ca -config ../openssl.cnf -extensions v3_intermediate_ca \
--days 3650 -notext -md sha256 \
--in intermediate00.csr.pem \
--out intermediate00.cert.pem
-```
-Check intermediate cert
-```shell
-openssl x509 -noout -text -in intermediate00.cert.pem
-```
-Check intermediate cert with root CA
-```shell
-openssl verify -CAfile ../ca.cert.pem intermediate00.cert.pem
-```
