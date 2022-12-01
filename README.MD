@@ -209,3 +209,59 @@ Check intermediate cert with root CA
 ```shell
 openssl verify -CAfile ca/ca.cert.pem ca/intermediate/intermediate.cert.pem
 ```
+## Certificates chain
+Create cert chain with root CA and intermediate
+```shell
+cat ca/intermediate/intermediate.cert.pem ca/ca.cert.pem > ca/intermediate/certs/intermediate-ca-chain.cert.pem
+```
+## Generate certs for clients (nodes)
+Generate private key
+```shell
+openssl genrsa -aes256 -out nodes/node0/node0.key.pem 2048
+```
+### Server certs
+Generate server cert CSR
+```shell
+openssl req -config ca/intermediate/openssl.cnf \
+-key nodes/node0/node0.key.pem \
+-new -sha256 -out nodes/node0/node0.server.csr.pem
+```
+Create and sign server cert
+```shell
+openssl ca -config ca/intermediate/openssl.cnf \
+-extensions server_cert -days 375 -notext -md sha256 \
+-in nodes/node0/node0.server.csr.pem \
+-out nodes/node0/node0.server.cert.pem
+```
+Check cert
+```shell
+openssl x509 -noout -text -in nodes/node0/node0.server.cert.pem
+```
+Check certs with chain
+```shell
+openssl verify -CAfile ca/intermediate/certs/intermediate-ca-chain.cert.pem \
+nodes/node0/node0.server.cert.pem
+```
+### Client certs
+Generate client cert CSR
+```shell
+openssl req -config ca/intermediate/openssl.cnf \
+-key nodes/node0/node0.key.pem \
+-new -sha256 -out nodes/node0/node0.client.csr.pem
+```
+Create and sign client cert
+```shell
+openssl ca -config ca/intermediate/openssl.cnf \
+-extensions usr_cert -days 375 -notext -md sha256 \
+-in nodes/node0/node0.client.csr.pem \
+-out nodes/node0/node0.client.cert.pem
+```
+Check cert
+```shell
+openssl x509 -noout -text -in nodes/node0/node0.client.cert.pem
+```
+Check certs with chain
+```shell
+openssl verify -CAfile ca/intermediate/certs/intermediate-ca-chain.cert.pem \
+nodes/node0/node0.client.cert.pem
+```
